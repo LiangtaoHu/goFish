@@ -1,0 +1,49 @@
+#include <Stepper.h>
+const float STEPS_PER_REV = 32;
+const float GEAR_RED = 64;
+const int stepsPerRev = 25000;
+
+Stepper myStepperFORWARD(stepsPerRev, 8, 9);
+Stepper myStepperLEFT(stepsPerRev, 6, 7);
+
+void setup() {
+  // Speed is in RPM
+  myStepperFORWARD.setSpeed(60);
+  myStepperLEFT.setSpeed(60);
+  Serial.begin(9600);
+  Serial.println(0);
+}
+
+void move(float xTime, float yTime) {
+  // First move along y-axis then move along x-axis
+  unsigned long startingTime = millis();
+  unsigned long finishedX = startingTime + abs(xTime);
+  unsigned long finishedY = finishedX + abs(yTime);
+  unsigned long now = startingTime;
+
+  while (now < finishedX) {
+    if (xTime > 0) {
+      myStepperLEFT.step(-25000);
+    } else {
+      myStepperLEFT.step(25000);
+    }
+    now = millis();
+  }
+
+  while (now < finishedY) {
+    if (yTime > 0) {
+      myStepperFORWARD.step(-25000);
+    } else {
+      myStepperFORWARD.step(25000);
+    }
+    now = millis();
+  }
+}
+
+void loop() {
+  if (Serial.available() > 0) {
+    double angle = Serial.readStringUntil('\n').toDouble();
+    move(2000*cos(angle), 2000*sin(angle));
+    Serial.println(0);
+  }
+}
